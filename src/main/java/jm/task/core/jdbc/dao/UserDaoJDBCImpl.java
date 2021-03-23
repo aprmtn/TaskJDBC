@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private final Connection connection = Util.getConnection();
+    private static final Connection connection = Util.getConnection();
 
     public UserDaoJDBCImpl() {
 
@@ -39,10 +39,15 @@ public class UserDaoJDBCImpl implements UserDao {
     public void saveUser(String name, String lastName, byte age) {
         String sql = "INSERT INTO users (name, lastName, age) VALUES (?, ?, ?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+            connection.setAutoCommit(false);
+
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
             preparedStatement.executeUpdate();
+
+            connection.commit();
+
             System.out.println("User с именем - " + name + " добавлен в базу данных");
         } catch (SQLException e) {
             e.printStackTrace();
@@ -52,8 +57,12 @@ public class UserDaoJDBCImpl implements UserDao {
     public void removeUserById(long id) {
         String sql = "DELETE FROM users WHERE id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
+
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
+
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -80,8 +89,12 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void cleanUsersTable() {
         try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
+
             String sql = "DELETE FROM users";
             statement.executeUpdate(sql);
+
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
         }
